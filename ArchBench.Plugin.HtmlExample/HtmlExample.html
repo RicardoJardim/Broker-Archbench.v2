@@ -1,0 +1,94 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+
+    <title>Html Example</title>
+
+    <link rel="icon" href="/favicon.ico" type="image/x-icon" sizes="16x16" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon.png">
+    <style>
+        body {
+            background-color: linen;
+            margin: 0;
+        }
+
+        #divs {
+            margin: auto;
+            width: 50%;
+            padding: 10px;
+            color: #008CBA;
+            text-align: center;
+        }
+
+        .button {
+            background-color: white;
+            color: black;
+            border: 2px solid #008CBA;
+            padding: 16px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            transition-duration: 0.4s;
+            cursor: pointer;
+            margin-top: 5%;
+        }
+
+            .button:hover {
+                background-color: #008CBA;
+                color: white;
+            }
+    </style>
+</head>
+
+<body>
+    <div id="divs">
+        <h1> HTML Example Page </h1>
+        <h2> Rendered by broker</h2>
+        <img src="/favicon.png" alt="AS" height="80" width="80"/>
+        <br />
+        <a class="button" href="/example">Change Page</a>
+        <br />
+        <br />
+        <a class="button" href="/image">Image</a>
+        <br />
+        <br />
+        <a class="button" href="/video">Video</a>
+        <br />
+        <br />
+        <form method="post" action="/form">
+            <fieldset>
+                <legend>Simple Form:</legend>
+
+                <label for="fname">First name:</label>
+                <input type="text" id="fname" name="fname" required><br><br>
+                <label for="lname">Last name:</label>
+                <input type="text" id="lname" name="lname" required><br><br>
+
+                <input type="submit" value="Submit">
+            </fieldset>
+        </form>
+        <br />
+        <br />
+
+        <!--  <form method="post" action="/post/image" enctype="multipart/form-data">
+          <fieldset>
+              <legend>Upload an image</legend>
+
+              <label for="name">name:</label>
+              <input type="text" id="name" name="name" required><br><br>
+              <label for="file_pic">Choose file to upload:</label>
+              <input type="file" id="file_pic" name="file_pic"
+                     accept=".jpg, .jpeg, .png" required>
+
+              <input type="submit" value="Submit">
+          </fieldset>
+      </form>
+        -->
+    </div>
+
+
+</body>
+</html>
