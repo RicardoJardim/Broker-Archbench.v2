@@ -3,9 +3,7 @@ using HttpServer;
 using HttpServer.Sessions;
 using System;
 using System.IO;
-using System.Resources;
 using System.Text;
-using System.Web;
 
 
 namespace ArchBench.Plugin.HtmlExample
@@ -149,41 +147,20 @@ namespace ArchBench.Plugin.HtmlExample
 
                             return true;
                         }
-                    }
-
-                    //Nao consegui fazer ainda
-                    if (aRequest.Uri.AbsolutePath.StartsWith("/post/image", StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        Host.Logger.WriteLine("Responding to post request '/post/image' ");
-
-                        var ext = aRequest.Form.GetFile("file_pic").UploadFilename.Substring(aRequest.Form.GetFile("file_pic").UploadFilename.LastIndexOf('.'));
-                        var extension = ext.ToLower();
-
-                        Host.Logger.WriteLine($" name : {aRequest.Form["name"].Value}");
-                        Host.Logger.WriteLine($" file_pic : {aRequest.Form.GetFile("file_pic").UploadFilename} + ext : {extension}");
-
-
-
-                        if (aRequest.Form.Contains("name") && aRequest.Form.ContainsFile("file_pic"))
+                        else
                         {
-
-                            /* 
-                            var x = (HttpInputItem) aRequest.Form.GetFile("file_pic")
-
-
-                           string path = @"..\..\..\ArchBench.Plugin.HtmlExample\images\" + aRequest.Form["name"].Value + extension;
-                            var result = $"<html><body> <h2> HTML Image Name: {aRequest.Form["name"].Value} </h2>  <img src='{extension}' width='500' height='333' ></ body ></ html > ";
+                            var result = Error("All fields are required");
 
                             var writer = new StreamWriter(aResponse.Body);
                             writer.WriteLine(result);
                             writer.Flush();
 
-                            Host.Logger.WriteLine("Sending back to broker  ");*/
-
+                            Host.Logger.WriteLine("Sending back to broker  ");
 
                             return true;
                         }
                     }
+
                     break;
                 default:
                     return false;
@@ -252,6 +229,15 @@ namespace ArchBench.Plugin.HtmlExample
             string result = $"<html><body style='margin: 0px; background-color: linen;'> " +
                             $"<h2 style='text-align: center; color: #008CBA;'> First name: {array[0]} </h2>" +
                             $"<h2 style='text-align: center; color: #008CBA;'> Last name: {array[1]} </h2>"
+                            + $"</body></html>";
+
+            return result;
+        }
+
+        private string Error(string error)
+        {
+            string result = $"<html><body style='margin: 0px; background-color: linen;'> " +
+                            $"<h1 style='text-align: center; color: #008CBA;'> Error: {error} </h1>"
                             + $"</body></html>";
 
             return result;
