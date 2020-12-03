@@ -1,6 +1,6 @@
 # Building a Broker using C# and ArchBench v2 software
 
-Este projeto consiste na construção de um Broker em C# que consiste num padrão arquitetural utilizado para estruturar sistemas distribuidos. Este é responsável pela coordenação da comunicação, tais como o encaminhamento de pedidos, bem como pela transmissão de resultados e excepções.
+Este projeto consiste na construção de um Broker em C# que é um padrão arquitetural utilizado para estruturar sistemas distribuidos. Este é responsável pela coordenação da comunicação, tais como o encaminhamento de pedidos, bem como pela transmissão de resultados e excepções.
 
 ## ArchBench
 
