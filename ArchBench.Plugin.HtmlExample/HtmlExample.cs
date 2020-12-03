@@ -33,8 +33,8 @@ namespace ArchBench.Plugin.HtmlExample
            
         }
         /// <summary>
-        /// ESTE METODOS IRA PROCESSAR 2 TIDOS DE PEDIDOS (POST OU GET) 
-        /// RETORNA FICHEIROS (IMAGENS E VIDEOS) OU RETORNA TEXTO EM HTML
+        /// Este metodo ira processar pedidos Post e Get
+        /// Retorna imagens, videos e html
         /// </summary>
         /// <param name="aRequest"></param>
         /// <param name="aResponse"></param>
@@ -111,7 +111,6 @@ namespace ArchBench.Plugin.HtmlExample
 
                     }
 
-                    //FAZ 2 PEDIDOS PORQUE O 1 -> DOCUMENT E 2 -> MEDIA
                     if (aRequest.Uri.AbsolutePath.StartsWith("/video", StringComparison.InvariantCultureIgnoreCase))
                     {
 
@@ -137,6 +136,10 @@ namespace ArchBench.Plugin.HtmlExample
                             stringArray[1] = aRequest.Form["lname"].Value;
 
                             var result = CreateHtml(stringArray);
+                            
+                            //Cria a cookie Name com value do post
+                            string cookie = $"Name = {aRequest.Form["fname"].Value} {aRequest.Form["lname"].Value}";
+                            aResponse.AddHeader("Set-Cookie", cookie);
 
                             var writer = new StreamWriter(aResponse.Body);
                             writer.WriteLine(result);
@@ -169,7 +172,7 @@ namespace ArchBench.Plugin.HtmlExample
         }
 
         /// <summary>
-        /// LÊ UM FICHEIO HTML E TRANSFORMA NUMA STRING PARA SER UTILIZADA NA ESCRITA DO BODY
+        /// Le o ficheiro e devolve no body
         /// </summary>
         /// <param name="htmlFileNameWithPath"></param>
         /// <returns> StringBuilder </returns>
@@ -197,8 +200,7 @@ namespace ArchBench.Plugin.HtmlExample
         }
 
         /// <summary>
-        /// DEVOLVE AO CLIENTE RESURSOS (IMAGENS E VIDEO) 
-        /// USANDO A MemoryStream E MODIFICANDO O Content-type E Content-Length DEPENDENTE DO TIPO DE FICHEIRO
+        /// Devolve recursos
         /// </summary>
         /// <param name="aResponse"></param>
         /// <param name="resourcePath"></param>
@@ -219,11 +221,6 @@ namespace ArchBench.Plugin.HtmlExample
             aStream.Close();
         }
 
-        /// <summary>
-        /// RECEBE UM ARRAY DE STRING E TRAMSFORMA EM TEXTO
-        /// </summary>
-        /// <param name="array"></param>
-        /// <returns> TEXTO EM HTML</returns>
         private string CreateHtml(string[] array)
         {
             string result = $"<html><body style='margin: 0px; background-color: linen;'> " +

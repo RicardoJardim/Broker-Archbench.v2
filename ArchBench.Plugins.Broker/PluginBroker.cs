@@ -1,4 +1,4 @@
-﻿using ArchBench.PlugIns;
+using ArchBench.PlugIns;
 using HttpServer;
 using HttpServer.Sessions;
 using System;
@@ -15,7 +15,6 @@ namespace ArchBench.Plugins.Broker
 {
     public class PluginBroker : IArchBenchHttpPlugIn
     {
-        //Cenas do prof.
         public string Name => "Broker Plug-in";
 
         public string Description => "Implentação do padrão Broker";
@@ -36,8 +35,8 @@ namespace ArchBench.Plugins.Broker
         private int mNextServer { get; set; }
 
         /// <summary>
-        /// INICIALIZA O BROKER COM UM LISTENER EM TCP NA PORTA 9000
-        /// INICIA UMA TAREFA (THREAD) QUE IRA CORRER DURANTE TODO O PROCESSO EM BACKGROUND
+        /// Inicializa o Broker com um Listener em TCP na porta 900
+        /// Incia uma tarefa em background
         /// </summary>
         public void Initialize()
         {
@@ -52,8 +51,8 @@ namespace ArchBench.Plugins.Broker
         }
 
         /// <summary>
-        /// RECEBE UM PEDIDO DE REGISTO DE UM SERVIDOR 
-        /// ADICIONA A LISTA DOS SERVIDORES
+        /// Recebe um pedido de registo de um servidor
+        /// Adiciona a lista de servidores
         /// </summary>
         /// <param name="aAddress"></param>
         /// <param name="aPort"></param>
@@ -65,8 +64,8 @@ namespace ArchBench.Plugins.Broker
         }
 
         /// <summary>
-        /// RECEBE UM PEDIDO DE DESATIVAR O REGISTO DE UM SERVIDOR 
-        /// REMOVE DA LISTA DE REGISTOS SE ESTE ESTIVER LA
+        /// Recebe um pedido de desativar de um servidor
+        /// Remove a lista de servidores
         /// </summary>
         /// <param name="aAddress"></param>
         /// <param name="aPort"></param>
@@ -83,8 +82,8 @@ namespace ArchBench.Plugins.Broker
         }
 
         /// <summary>
-        /// TAREFA (THREAD) QUE IRA CORRER EM BACKGROUND
-        /// ESPERA QUE SERVIDORES PELA PORTA 9000 REALIZEM UM PEDIDO DE SE REGISTAR OU DESATIVAR O REGISTO
+        /// Tarefa em background
+        /// Espera que servidores pela porta 9000 realize um pedido
         /// </summary>
         private void ReceiveThreadFunction()
         {
@@ -128,10 +127,9 @@ namespace ArchBench.Plugins.Broker
         }
 
         /// <summary>
-        /// PROCESSO PRINCIPAL DO BOKER
-        /// RECEBE PEDIDOS DO CLIENTE E PEDE AOS SERVIDORES REGISTADOS PARA PROCESSAR ESSE PEDIDO
-        /// AO REBER RESPOSTA DO SERVIDOR VERIFICA O SEU CONTENT-TYPE
-        /// DE SEGUIDA RESPONDE AO CLIENTE DA MELHOR FORMA
+        /// Recebe pedidos do cliente e pede aos servidores registados para processar 
+        /// Verifica o content-tpe na resposta
+        /// Envia ao cliente da melhor forma
         /// </summary>
         /// <param name="aRequest"></param>
         /// <param name="aResponse"></param>
@@ -139,19 +137,20 @@ namespace ArchBench.Plugins.Broker
         /// <returns> SUCESSO OU FALHA </returns>
         public bool Process(IHttpRequest aRequest, IHttpResponse aResponse, IHttpSession aSession)
         {
-            //IDENTIFICA O HOST (IP DO BROKER)
+            //IP do broker
             string host = $"{aRequest.Uri.Host}:{aRequest.Uri.Port}";
 
-          
-            //PROCURA UM SERVIDOR PARA O CLIENTE
-            int index = getServer(aSession, aRequest); 
+
+            //Procura um servidor para o cliente
+
+            int index = getServer(aSession.Id);
 
             if (index == -1) return false;
 
-            //IDENTIFICA O TARGET (IP E PORTA DO SERVIDOR)
-            string target = $"http://{mServers[index].Key}:{mServers[index].Value}{aRequest.UriPath}"; 
+            //target IP (servidor)
+            string target = $"http://{mServers[index].Key}:{mServers[index].Value}{aRequest.UriPath}";
 
-            //INDENTIFICADOR DE RECURSOS ATRAVES DO TARGET
+            //Identificador de recursos
             Uri uri = new Uri(target);
 
             Host.Logger.WriteLine($"Sending request from broker server {host} to service server {mServers[index].Key}:{mServers[index].Value}");
@@ -161,50 +160,40 @@ namespace ArchBench.Plugins.Broker
             {
                 byte[] bytes = null;
 
-                //GUARDA A COOKIE NO BROWSER DO CLIENTE
-                if (aRequest.Cookies["session_id"] == null)
+                //envia para o servidor as cookies do browser
+                if (aRequest.Headers["Cookie"] != null)
                 {
-                    var cookie = "session_id =" + aSession.Id;
-                    aResponse.AddHeader("Set-Cookie", cookie);
+                    client.Headers.Add("Cookie", aRequest.Headers["Cookie"]);
                 }
 
-                //ADICIONA AS COOKIES AO CLIENT HEARDER CASO OS PLUGINS A NECESSITEM
-                if (aRequest.Cookies["session_id"] != null)
-                {
-                    client.Headers.Add("Cookie", aRequest.Cookies["session_id"].Value);                 
-                }              
-
-                //VERIFICA O TIPO DO METODO E ENVIA AOS SERVIDORES DISPONIVEIS
+                //Verifica metodo e envia para o servidor
                 switch (aRequest.Method)
                 {
                     case Method.Post:
-                        NameValueCollection form = new NameValueCollection(); //COLEÇÃO NOME E VALOR
+                        NameValueCollection form = new NameValueCollection();
                         foreach (HttpInputItem item in aRequest.Form)
                         {
                             form.Add(item.Name, item.Value);
                         }
-                        bytes = client.UploadValues(uri, form);  //ENVIA OS VALORES DO FORM
+                        bytes = client.UploadValues(uri, form);  //Form
                         break;
                     case Method.Get:
-                        bytes = client.DownloadData(uri); // RECEBE OS DADOS
+                        bytes = client.DownloadData(uri); // recebe
                         break;
                     default:
                         return false;
                 }
 
-                //VERIFICA QUAL É O CONTENT TYPE DO PEDIDO
-                aResponse.ContentType = client.ResponseHeaders[HttpResponseHeader.ContentType];         
+                aResponse.ContentType = client.ResponseHeaders[HttpResponseHeader.ContentType];
 
-                //RESPONDE AO CLIENTE DA MELHOR FORMA
-                if (aResponse.ContentType.StartsWith("image/"))
-                {               
-                    string data = client.Encoding.GetString(bytes);
-                    SendRequest(aResponse, client, data);
-
-                    Host.Logger.WriteLine($"Receiving service from service server {mServers[index].Key}:{mServers[index].Value} back to  broker server {host} ");
-                    Host.Logger.WriteLine(" ");
+                //Guarda uma cookie no boewser apartir de outro plugin
+                if (client.ResponseHeaders["Set-Cookie"] != null)
+                {
+                    aResponse.AddHeader("Set-Cookie", client.ResponseHeaders["Set-Cookie"]);
                 }
-                else if (aResponse.ContentType.StartsWith("video/")) 
+
+                //Responde da melhor forma
+                if (aResponse.ContentType.StartsWith("image/"))
                 {
                     string data = client.Encoding.GetString(bytes);
                     SendRequest(aResponse, client, data);
@@ -212,7 +201,15 @@ namespace ArchBench.Plugins.Broker
                     Host.Logger.WriteLine($"Receiving service from service server {mServers[index].Key}:{mServers[index].Value} back to  broker server {host} ");
                     Host.Logger.WriteLine(" ");
                 }
-                else if (aResponse.ContentType.StartsWith("text/html"))
+                else if (aResponse.ContentType.StartsWith("video/"))
+                {
+                    string data = client.Encoding.GetString(bytes);
+                    SendRequest(aResponse, client, data);
+
+                    Host.Logger.WriteLine($"Receiving service from service server {mServers[index].Key}:{mServers[index].Value} back to  broker server {host} ");
+                    Host.Logger.WriteLine(" ");
+                }
+                else if (aResponse.ContentType.Equals("text/html"))
                 {
                     string data = client.Encoding.GetString(bytes);
                     data = data.Replace($"http://{mServers[index].Key}:{mServers[index].Value}/", "/");
@@ -221,49 +218,40 @@ namespace ArchBench.Plugins.Broker
                     Host.Logger.WriteLine($"Receiving service from service server {mServers[index].Key}:{mServers[index].Value} back to  broker server {host} ");
                     Host.Logger.WriteLine(" ");
                 }
-                else 
+                else
                 {
                     aResponse.Body.Write(bytes, 0, bytes.Length);
                 }
+                return true;
+
             }
             catch (Exception e)
             {
                 Host.Logger.WriteLine($"Error plugin Broker : {e.Message}");
+                return false;
             }
-            return true;
+
         }
 
         /// <summary>
-        /// ATRAVES DO ID DA SESSAO DO CLIENTE PROCURA SE ESTE JA UTILIZOU UM SERVIDOR
-        /// CASO TENHA, O PEDIDO É FEITO SEMPRE PARA O MESMO SERVIDOR
-        /// CASO NAO ESTEJA, UTILIZA A FUNÇAO GetNextServer() E ADICIONA A LISTA DE SESSOES
+        /// procura se o utilizado ja utilizou um servidor
         /// </summary>
         /// <param name="aSession"></param>
-        /// <returns> INDEX DA LISTA DE SERVIDORES </returns>
-        private int getServer(IHttpSession aSession, IHttpRequest aCookie)
+        /// <returns> index da lista de servidores </returns>
+        private int getServer(string aId)
         {
-            int index;
-
-            if(aCookie.Cookies["session_id"] != null)
+            if (mSessionsClient.ContainsKey(aId))
             {
-                if (mSessionsClient.ContainsKey(aCookie.Cookies["session_id"].Value))
-                {
-                    index = mSessionsClient[aCookie.Cookies["session_id"].Value];
-                }
-                else
-                {
-                    index = getServerNewClient(aCookie.Cookies["session_id"].Value);
-                }
+                return mSessionsClient[aId];
             }
             else
             {
-                index = getServerNewClient(aSession.Id);
+                return getServerNewClient(aId);
             }
-            return index;
         }
 
         /// <summary>
-        /// 
+        /// Encontra um novo servidor e adiciona o cliente á lista
         /// </summary>
         /// <param name="id"></param>
         /// <returns> </returns>
@@ -278,9 +266,9 @@ namespace ArchBench.Plugins.Broker
         }
 
         /// <summary>
-        /// UTILIZAÇÃO DE ROUND-ROBIN PARA ESCOLHA DO SERVIDOR A RESPONDER AO PEDIDO
+        /// Escolha do servidor
         /// </summary>
-        /// <returns> INDEX DO SERVIDOR DA LISTA DOS SERVIDORES </returns>
+        /// <returns>index da lista de servidores </returns>
         private int GetNextServer()
         {
             if (mServers.Count == 0) return -1;
@@ -288,9 +276,8 @@ namespace ArchBench.Plugins.Broker
             return mNextServer;
         }
 
-
         /// <summary>
-        /// RESPONDE AO CLIENTE ATRAVÉS DO BODY OS DADOS PRENTENDIDOS
+        /// Responde ao cliente pelo body
         /// </summary>
         /// <param name="aResponse"></param>
         /// <param name="aClient"></param>
@@ -300,9 +287,6 @@ namespace ArchBench.Plugins.Broker
             StreamWriter writer = new StreamWriter(aResponse.Body, aClient.Encoding);
             writer.Write(aData);
             writer.Flush();
-           
         }
-
-
     }
 }
